@@ -26,9 +26,12 @@ func TransferPointHandler(c *fiber.Ctx) error {
 	if receiver.ID == 0 {
 		return c.Status(404).JSON(fiber.Map{"error": "Receiver not found"})
 	}
+	var sender model.User
+	TransferDB.First(&sender, userID)
 	transfer := model.Transfer{
 		SenderID:     userID,
 		ReceiverID:   receiver.ID,
+		SenderCode:   sender.Email,
 		ReceiverCode: req.ReceiverCode,
 		Points:       req.Points,
 		CreatedAt:    time.Now().Format("2006-01-02"),
@@ -50,10 +53,11 @@ func PointHistoriesHandler(c *fiber.Ctx) error {
 		TransferDB.First(&sender, t.SenderID)
 		TransferDB.First(&receiver, t.ReceiverID)
 		histories = append(histories, fiber.Map{
-			"from":   sender.FirstName + " " + sender.LastName,
-			"to":     receiver.FirstName + " " + receiver.LastName,
-			"points": t.Points,
-			"date":   t.CreatedAt,
+			"from":        sender.FirstName + " " + sender.LastName,
+			"to":          receiver.FirstName + " " + receiver.LastName,
+			"points":      t.Points,
+			"date":        t.CreatedAt,
+			"sender_code": t.SenderCode,
 		})
 	}
 	return c.JSON(histories)

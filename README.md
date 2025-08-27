@@ -80,6 +80,7 @@ Response:
 }
 ```
 
+
 ### 5. Get Point Histories
 **GET** `/point-histories`
 
@@ -94,7 +95,8 @@ Response:
 		"from": "User1 One",
 		"to": "User2 Two",
 		"points": 100,
-		"date": "2024-01-19"
+		"date": "2024-01-19",
+		"sender_code": "user1@example.com"
 	}
 ]
 ```
