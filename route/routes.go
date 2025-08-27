@@ -4,14 +4,14 @@ import (
 	"workshop2/handler"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/swagger"
 	"gorm.io/gorm"
 )
 
 func RegisterRoutes(app *fiber.App, db interface{}) {
-	app.Get("/swagger/*", swagger.HandlerDefault)
 	// Set DB and JWT secret for handlers
-	handler.DB = db.(*gorm.DB)
+	gdb := db.(*gorm.DB)
+	handler.DB = gdb
+	handler.TransferDB = gdb
 	handler.JwtSecret = []byte("supersecretkey")
 
 	app.Post("/register", handler.RegisterHandler)
@@ -20,4 +20,6 @@ func RegisterRoutes(app *fiber.App, db interface{}) {
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.JSON(fiber.Map{"message": "Hello World"})
 	})
+	app.Post("/transfer", handler.AuthMiddleware, handler.TransferPointHandler)
+	app.Get("/point-histories", handler.AuthMiddleware, handler.PointHistoriesHandler)
 }
