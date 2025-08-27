@@ -2,9 +2,9 @@ package model
 
 type Transfer struct {
 	ID           int    `json:"id" gorm:"primaryKey;autoIncrement"`
-	SenderID     int    `json:"sender_id"`
+	SenderID     int    `json:"sender_id" gorm:"index"`
 	SenderCode   string `json:"sender_code"`
-	ReceiverID   int    `json:"receiver_id"`
+	ReceiverID   int    `json:"receiver_id" gorm:"index"`
 	ReceiverCode string `json:"receiver_code"`
 	Points       int    `json:"points"`
 	CreatedAt    string `json:"created_at"`
