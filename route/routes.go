@@ -2,6 +2,7 @@ package route
 
 import (
 	"workshop2/handler"
+	"workshop2/service"
 
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
@@ -10,9 +11,9 @@ import (
 func RegisterRoutes(app *fiber.App, db interface{}) {
 	// Set DB and JWT secret for handlers
 	gdb := db.(*gorm.DB)
-	handler.DB = gdb
-	handler.TransferDB = gdb
-	handler.JwtSecret = []byte("supersecretkey")
+	jwtSecret := []byte("supersecretkey")
+	handler.UserService = service.NewUserService(gdb, jwtSecret)
+	handler.TransferService = service.NewTransferService(gdb)
 
 	app.Post("/register", handler.RegisterHandler)
 	app.Post("/login", handler.LoginHandler)

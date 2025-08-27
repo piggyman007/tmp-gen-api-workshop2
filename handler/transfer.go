@@ -1,14 +1,14 @@
 package handler
 
 import (
-	"time"
 	"workshop2/model"
+	"workshop2/service"
 
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )
 
-var TransferDB *gorm.DB
+var TransferService *service.TransferService
 
 type TransferRequest struct {
 	ReceiverCode string `json:"receiver_code"`
@@ -21,22 +21,15 @@ func TransferPointHandler(c *fiber.Ctx) error {
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid request"})
 	}
-	var receiver model.User
-	TransferDB.Where("email = ? OR id = ?", req.ReceiverCode, req.ReceiverCode).First(&receiver)
-	if receiver.ID == 0 {
-		return c.Status(404).JSON(fiber.Map{"error": "Receiver not found"})
-	}
-	var sender model.User
-	TransferDB.First(&sender, userID)
-	transfer := model.Transfer{
-		SenderID:     userID,
-		ReceiverID:   receiver.ID,
-		SenderCode:   sender.Email,
+	serviceReq := service.TransferRequest{
 		ReceiverCode: req.ReceiverCode,
 		Points:       req.Points,
-		CreatedAt:    time.Now().Format("2006-01-02"),
 	}
-	if err := TransferDB.Create(&transfer).Error; err != nil {
+	err := TransferService.TransferPoint(userID, serviceReq)
+	if err == gorm.ErrRecordNotFound {
+		return c.Status(404).JSON(fiber.Map{"error": "Receiver not found"})
+	}
+	if err != nil {
 		return c.Status(500).JSON(fiber.Map{"error": "Transfer failed"})
 	}
 	return c.JSON(fiber.Map{"success": true})
@@ -44,14 +37,13 @@ func TransferPointHandler(c *fiber.Ctx) error {
 
 func PointHistoriesHandler(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
-	var transfers []model.Transfer
-	TransferDB.Where("sender_id = ? OR receiver_id = ?", userID, userID).Order("created_at desc").Limit(10).Find(&transfers)
+	transfers := TransferService.GetPointHistories(userID, 10)
 	var histories []fiber.Map
 	for _, t := range transfers {
 		var sender model.User
 		var receiver model.User
-		TransferDB.First(&sender, t.SenderID)
-		TransferDB.First(&receiver, t.ReceiverID)
+		TransferService.DB.First(&sender, t.SenderID)
+		TransferService.DB.First(&receiver, t.ReceiverID)
 		histories = append(histories, fiber.Map{
 			"from":        sender.FirstName + " " + sender.LastName,
 			"to":          receiver.FirstName + " " + receiver.LastName,

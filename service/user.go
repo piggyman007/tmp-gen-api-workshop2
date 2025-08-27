@@ -12,7 +12,14 @@ import (
 	"gorm.io/gorm"
 )
 
-var JwtSecret = []byte("supersecretkey")
+type UserService struct {
+	DB        *gorm.DB
+	JwtSecret []byte
+}
+
+func NewUserService(db *gorm.DB, jwtSecret []byte) *UserService {
+	return &UserService{DB: db, JwtSecret: jwtSecret}
+}
 
 func HashPassword(pw string) string {
 	h := sha256.New()
@@ -24,22 +31,22 @@ func CheckPassword(input, hashed string) bool {
 	return HashPassword(input) == hashed
 }
 
-func RegisterUser(db *gorm.DB, req *model.User) error {
+func (s *UserService) RegisterUser(req *model.User) error {
 	if req.Email == "" || req.Password == "" {
 		return ErrMissingFields
 	}
 	var exists model.User
-	db.Where("email = ?", req.Email).First(&exists)
+	s.DB.Where("email = ?", req.Email).First(&exists)
 	if exists.ID != 0 {
 		return ErrEmailExists
 	}
 	req.Password = HashPassword(req.Password)
-	return db.Create(req).Error
+	return s.DB.Create(req).Error
 }
 
-func LoginUser(db *gorm.DB, email, password string) (string, error) {
+func (s *UserService) LoginUser(email, password string) (string, error) {
 	var user model.User
-	db.Where("email = ?", email).First(&user)
+	s.DB.Where("email = ?", email).First(&user)
 	if user.ID == 0 || !CheckPassword(password, user.Password) {
 		return "", ErrInvalidCredentials
 	}
@@ -47,16 +54,16 @@ func LoginUser(db *gorm.DB, email, password string) (string, error) {
 		"user_id": user.ID,
 		"exp":     time.Now().Add(time.Hour * 72).Unix(),
 	})
-	t, err := token.SignedString(JwtSecret)
+	t, err := token.SignedString(s.JwtSecret)
 	if err != nil {
 		return "", err
 	}
 	return t, nil
 }
 
-func GetUserByID(db *gorm.DB, id int) (*model.User, error) {
+func (s *UserService) GetUserByID(id int) (*model.User, error) {
 	var user model.User
-	db.First(&user, id)
+	s.DB.First(&user, id)
 	if user.ID == 0 {
 		return nil, ErrUserNotFound
 	}

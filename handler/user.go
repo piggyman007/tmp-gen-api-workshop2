@@ -5,17 +5,16 @@ import (
 	"workshop2/service"
 
 	"github.com/gofiber/fiber/v2"
-	"gorm.io/gorm"
 )
 
-var DB *gorm.DB
+var UserService *service.UserService
 
 func RegisterHandler(c *fiber.Ctx) error {
 	var req model.User
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid request"})
 	}
-	err := service.RegisterUser(DB, &req)
+	err := UserService.RegisterUser(&req)
 	if err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": err.Error()})
 	}
@@ -31,7 +30,7 @@ func LoginHandler(c *fiber.Ctx) error {
 	if err := c.BodyParser(&req); err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid request"})
 	}
-	token, err := service.LoginUser(DB, req.Email, req.Password)
+	token, err := UserService.LoginUser(req.Email, req.Password)
 	if err != nil {
 		return c.Status(401).JSON(fiber.Map{"error": err.Error()})
 	}
@@ -40,7 +39,7 @@ func LoginHandler(c *fiber.Ctx) error {
 
 func MeHandler(c *fiber.Ctx) error {
 	userID := c.Locals("user_id").(int)
-	user, err := service.GetUserByID(DB, userID)
+	user, err := UserService.GetUserByID(userID)
 	if err != nil {
 		return c.Status(404).JSON(fiber.Map{"error": err.Error()})
 	}
