@@ -10,7 +10,7 @@ type TransferDB struct {
 	DB *gorm.DB
 }
 
-func NewTransferDB(db *gorm.DB) *TransferDB {
+func NewTransferDB(db *gorm.DB) TransferDBInterface {
 	return &TransferDB{DB: db}
 }
 
@@ -41,3 +41,12 @@ func (t *TransferDB) FindTransfersByUser(userID int, limit int) []model.Transfer
 	t.DB.Where("sender_id = ? OR receiver_id = ?", userID, userID).Order("created_at desc").Limit(limit).Find(&transfers)
 	return transfers
 }
+
+type TransferDBInterface interface {
+	FindUserByCode(code interface{}) (model.User, error)
+	FindUserByID(id int) (model.User, error)
+	CreateTransfer(transfer *model.Transfer) error
+	FindTransfersByUser(userID int, limit int) []model.Transfer
+}
+
+var _ TransferDBInterface = (*TransferDB)(nil)

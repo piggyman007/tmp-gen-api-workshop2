@@ -1,3 +1,8 @@
+// TransferService now uses db.TransferDBInterface for DB operations
+// Easily swap between real DB and mock for testing
+// Last update: 2025-08-27
+// Author: alongkorn.c
+
 package service
 
 import (
@@ -10,7 +15,7 @@ import (
 
 type TransferService struct {
 	DB      *gorm.DB
-	DBLayer *db.TransferDB
+	DBLayer db.TransferDBInterface
 }
 
 type TransferRequest struct {
