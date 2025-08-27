@@ -15,7 +15,7 @@ import (
 
 type TransferService struct {
 	DB      *gorm.DB
-	DBLayer db.TransferDBInterface
+	DBLayer db.TransferDB
 }
 
 type TransferRequest struct {

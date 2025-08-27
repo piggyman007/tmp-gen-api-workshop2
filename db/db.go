@@ -10,8 +10,8 @@ type TransferDB struct {
 	DB *gorm.DB
 }
 
-func NewTransferDB(db *gorm.DB) TransferDBInterface {
-	return &TransferDB{DB: db}
+func NewTransferDB(db *gorm.DB) TransferDB {
+	return TransferDB{DB: db}
 }
 
 func (t *TransferDB) FindUserByCode(code interface{}) (model.User, error) {
